@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<canvas id="gameCanvas" width="1300" height="600"></canvas>
+<script>
+    var canvas
+    var canvasContext;
+    var ballX=1160;
+    var wallX=1160;
+    // jumpChecker
+    var didJump=false;
+    var didEat=false;
+    var period=25;
+    var start=false;
+    //points
+    var score=0;
+    window.onload=function(){
+        canvas=document.getElementById('gameCanvas');
+        canvasContext=canvas.getContext('2d');
+        setInterval(doBoth,30);
+        canvas.addEventListener('click',function(evt){
+    
+            var mousePos=calcMousePos(evt);
+            var Ycord=mousePos.y;
+            var Xcord=mousePos.x;
+            if(!start){
+                if(Ycord<canvas.height && Xcord<canvas.width){
+                    start=true;
+                }
+            }
+            else{
+            if (Xcord>(canvas.width-((canvas.width)/3))){
+            if ((Ycord>340)&& (Ycord<470)&&!didJump && (ballX>140)){
+            //jump();
+            didEat=true;
+            }
+            else if ((Ycord>475)&& !didEat && (ballX>140)){
+                didJump=true;
+            }
+        }
+           }
+        }
+     )
+    }
+    function doBoth(){
+        moveStuff();
+        drawEverything()
+    }
+    function moveStuff(){
+        ballX=ballX-velocity();
+    }
+    // color of food 
+    var foodColor= drawOption();
+    var match=roundDecider();
+    var fakeFoodColor=drawOption();
+    while (foodColor==fakeFoodColor){
+        foodColor=drawOption();
+        fakeFoodColor= drawOption();
+    }
+    function drawEverything(){
+        let died=false;
+        canvasContext.fillStyle='black';
+        canvasContext.fillRect(0,0,canvas.width,canvas.height);
+        //rules
+           if(!start){
+            ballX=1300;
+          let  ruleText0="Rules:"
+           let ruleText1="If the color of the block to the right matches the block";
+           let ruleText2="given below, press EAT or else press JUMP. Must press";
+           let ruleText3="before the block to the right touches the circle. Enjoy"
+            let thisText="EAT/JUMP";
+            let playText="{Click anywhere to play}";
+           canvasContext.font='bold 200pt Fantasy';
+           canvasContext.fillStyle='#FFA500';
+           canvasContext.fillText(thisText,450,240,500)
+           canvasContext.font='bold 25pt Calibri';
+           canvasContext.fillStyle='#16F529';
+           canvasContext.fillText(ruleText0,450,330,100);
+           canvasContext.fillText(ruleText1,450,380,600)
+           canvasContext.fillText(ruleText2,450,417,600)
+           canvasContext.fillText(ruleText3,450,454,600)
+           canvasContext.fillText(playText,450,530,600)
+           // example
+            canvasContext.fillStyle='#FF8C00' ;
+            canvasContext.beginPath();
+            canvasContext.arc(70,260,70,0,Math.PI*2,true)
+            canvasContext.fill();
+            canvasContext.fillStyle='silver';
+            canvasContext.fillRect(1000,250,200,60);
+            canvasContext.fillStyle='green';
+            canvasContext.fillRect(100,440,200,60);
+           }
+        else{
+        //the food
+        //canvasContext.fillStyle=foodColor;
+        //canvasContext.fillRect(ballX,170,200,60);
+        for(let i=0;i<4;i++){
+           
+            canvasContext.fillStyle=foodColor[i];
+            canvasContext.fillRect(ballX+(50*i)+5,250,50,60);
+            //the option match check
+        if (match==true){
+            canvasContext.fillStyle=foodColor[i];
+            canvasContext.fillRect(350+(50*i),440,50,60);
+        }
+        else if (match==false){
+            canvasContext.fillStyle=fakeFoodColor[i];
+            canvasContext.fillRect(350+(50*i),440,50,60);
+        }
+        }
+        //land
+        canvasContext.fillStyle='grey';
+        canvasContext.fillRect(0,330,canvas.width,10);
+        // points display
+        canvasContext.font='bold 30pt Calibri';
+        canvasContext.fillText(score,canvas.width-100,100,100);
+        // jump or eat display
+        canvasContext.fillStyle='white';
+        canvasContext.font='bold 40pt Calibri';
+        canvasContext.fillText("EAT",1000,425);
+        canvasContext.fillText("JUMP",1000,550);
+        canvasContext.fillStyle='#FF8C00';
+        canvasContext.fillRect(canvas.width-((canvas.width)/3),340,5,260);
+       // canvasContext.fillStyle='white';
+        canvasContext.fillRect(canvas.width-((canvas.width)/3),470,((canvas.width)/3),5)
+        //the eater
+        //canvasContext.fillStyle='#FF8C00' ;
+        //canvasContext.beginPath();
+        //canvasContext.arc(70,260,70,0,Math.PI*2,true)
+        canvasContext.fill();
+        if (didJump){
+          if ((ballX)>=140){
+            jump();
+          }
+          else if((ballX<=140) &&((ballX+200)>=0)){
+            jump();
+          }
+          else{
+            if (scoreCheck()&& (ballX+200)<=0){
+            ballX=1300;
+            foodColor= drawOption();
+            match=roundDecider();
+            fakeFoodColor=drawOption();
+            while (foodColor==fakeFoodColor){
+            foodColor=drawOption();
+            fakeFoodColor= drawOption();
+           }
+          didJump=false;
+          }
+          else if(!scoreCheck()&& (ballX+200)<=0){
+            died=true;
+          }
+        }
+        }
+        // ball reset
+           else if (didEat==true){
+            if (ballX>=140){
+                eat();
+            }
+            else{ 
+            if(scoreCheck()){
+            ballX=1300;
+            foodColor= drawOption();
+            match=roundDecider();
+            fakeFoodColor=drawOption();
+            while (foodColor==fakeFoodColor){
+            foodColor=drawOption();
+            fakeFoodColor= drawOption();
+            }
+            didEat=false;
+            }
+            else if(!scoreCheck()&& (ballX+200)<=0){
+            died=true;
+          }
+        }
+           }
+           else{
+            canvasContext.fillStyle='#FF8C00' ;
+            canvasContext.beginPath();
+            canvasContext.arc(70,260,70,0,Math.PI*2,true)
+            canvasContext.fill();
+            if((ballX+200)<=0){
+            canvasContext.fillStyle='#FF8C00' ;
+            canvasContext.beginPath();
+            canvasContext.arc(70,260,70,0,Math.PI*2,true)
+            canvasContext.fill();
+            died=true;
+            }
+            }
+        }
+        if(died){
+            canvasContext.fillStyle='black';
+            canvasContext.fillRect(145,0,canvas.width-300,330);
+            canvasContext.fillStyle='white';
+            canvasContext.fillText("Refresh to play again",370,165,360)
+        }
+        }
+         
+    
+        
+
+    //random color generator
+    function drawOption(){
+        let colorList=["red","green","blue","yellow"]
+        let thisVal= Math.floor(Math.random()*4);
+        let newList=[colorList[Math.floor(Math.random()*4)],colorList[Math.floor(Math.random()*4)],colorList[Math.floor(Math.random()*4)],colorList[Math.floor(Math.random()*4)]]
+        return newList;
+    }
+    
+    
+    //jumpCode
+     function jump(){
+        canvasContext.fillStyle='#FF8C00' ;
+        canvasContext.beginPath();
+        canvasContext.arc(70,90,70,0,Math.PI*2,true)
+        canvasContext.fill();
+       // didJump=true;
+     }
+
+     function calcMousePos(evt){
+        var rect= canvas.getBoundingClientRect();
+        var root=document.documentElement;
+        var mouseX=evt.clientX-rect.left-root.scrollLeft;
+        var mouseY=evt.clientY-rect.top-root.scrollTop;
+        return{
+            x: mouseX,
+            y: mouseY
+        };
+    }
+
+    //match or no match decider
+    function roundDecider(){
+        if (Math.floor(Math.random()*2)==1){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+     function eat(){
+           // open mouth
+            canvasContext.fillStyle='#FF8C00' ;
+            canvasContext.beginPath();
+            canvasContext.arc(70,260,70,0,Math.PI/2,true)
+            canvasContext.fill();
+             //semicircle
+             //canvasContext.fillStyle= '#FF8C00' ;
+            canvasContext.beginPath();
+            canvasContext.arc(105,290,40,0,Math.PI,false)
+            canvasContext.fill();
+            //coverUp
+            //canvasContext.fillStyle='#FF8C00'
+            canvasContext.fillRect(70,290,35,40);
+           // didEat=true;
+     }
+
+     function scoreCheck(){
+        let gameOn=false;
+        if (match && didEat){
+           gameOn=true;
+           score++;
+        }
+        else if(!match && didJump){
+            gameOn=true;
+            score++;
+        }
+        return gameOn;
+     }
+    // velocity
+    function velocity(){
+    if (score<10){
+        return (18);
+    }
+    else if (score<20) {
+        return (21);
+    }
+    else if(score<50){
+       return (23);
+    }
+    else if(score<100){
+    return (25);
+    }
+    else if (score<250){
+        return (27);
+    }
+    else{
+        return (28);
+    }
+    }
+     
+</script>
+</html>
